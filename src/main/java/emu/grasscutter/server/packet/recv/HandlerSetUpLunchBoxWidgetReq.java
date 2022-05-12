@@ -13,6 +13,6 @@ public class HandlerSetUpLunchBoxWidgetReq extends PacketHandler {
 	public void handle(GameSession session, byte[] header, byte[] payload) throws Exception {
 		SetUpLunchBoxWidgetReq req = SetUpLunchBoxWidgetReq.parseFrom(payload);
 
-		session.getPlayer().sendPacket(new PacketSetUpLunchBoxWidgetRsp(req.getLunchBoxData()));
+		session.send(new PacketSetUpLunchBoxWidgetRsp(req.getLunchBoxData()));
 	}
 }
