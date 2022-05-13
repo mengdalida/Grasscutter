@@ -9,7 +9,7 @@ public enum ConsumptionType {
     CLIMB_JUMP(-2500),
     DASH(-360),
     FIGHT(0), // See StaminaManager.getFightConsumption()
-    FLY(-60),
+    FLY(-20),
     // Slow swimming is handled per movement, not per second.
     // Arm movement frequency depends on gender/age/height.
     // TODO: Instead of cost -80 per tick, find a proper way to calculate cost.

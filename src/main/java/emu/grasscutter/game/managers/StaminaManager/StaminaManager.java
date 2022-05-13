@@ -14,14 +14,16 @@ import emu.grasscutter.net.proto.MotionStateOuterClass.MotionState;
 import emu.grasscutter.net.proto.PlayerDieTypeOuterClass.PlayerDieType;
 import emu.grasscutter.net.proto.VectorOuterClass.Vector;
 import emu.grasscutter.server.game.GameSession;
-import emu.grasscutter.server.packet.send.*;
+import emu.grasscutter.server.packet.send.PacketAvatarLifeStateChangeNotify;
+import emu.grasscutter.server.packet.send.PacketEntityFightPropUpdateNotify;
+import emu.grasscutter.server.packet.send.PacketLifeStateChangeNotify;
+import emu.grasscutter.server.packet.send.PacketPlayerPropNotify;
 import emu.grasscutter.utils.Position;
 import org.jetbrains.annotations.NotNull;
 
-import java.lang.Math;
 import java.util.*;
 
-import static emu.grasscutter.Configuration.*;
+import static emu.grasscutter.Configuration.GAME_OPTIONS;
 
 public class StaminaManager {
 
@@ -658,7 +660,7 @@ public class StaminaManager {
             lastSkillFirstTick = false;
             return new Consumption(ConsumptionType.TALENT_DASH, -1000);
         } else {
-            return new Consumption(ConsumptionType.TALENT_DASH, -500);
+            return new Consumption(ConsumptionType.TALENT_DASH, 0);
         }
     }
 
