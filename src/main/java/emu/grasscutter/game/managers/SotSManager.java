@@ -1,14 +1,11 @@
-package emu.grasscutter.game.managers.SotSManager;
+package emu.grasscutter.game.managers;
 
 import emu.grasscutter.Grasscutter;
 import emu.grasscutter.game.avatar.Avatar;
 import emu.grasscutter.game.entity.EntityAvatar;
-import emu.grasscutter.game.entity.GameEntity;
-import emu.grasscutter.game.managers.MovementManager.MovementManager;
 import emu.grasscutter.game.player.Player;
 import emu.grasscutter.game.props.FightProperty;
 import emu.grasscutter.game.props.PlayerProperty;
-import emu.grasscutter.game.world.World;
 import emu.grasscutter.net.proto.ChangeHpReasonOuterClass;
 import emu.grasscutter.net.proto.PropChangeReasonOuterClass;
 import emu.grasscutter.server.game.GameSession;
@@ -28,6 +25,8 @@ public class SotSManager {
 
     private final Player player;
     private Timer autoRecoverTimer;
+
+    public final static int GlobalMaximumSpringVolume = 8500000;
 
     public SotSManager(Player player) {
         this.player = player;
@@ -94,9 +93,14 @@ public class SotSManager {
     }
 
     public void refillSpringVolume() {
-        // TODO: max spring volume depends on level of the statues in Mondstadt and Liyue.
+        // Temporary: Max spring volume depends on level of the statues in Mondstadt and Liyue. Override until we have statue level.
+        // TODO: remove
         // https://genshin-impact.fandom.com/wiki/Statue_of_The_Seven#:~:text=region%20of%20Inazuma.-,Statue%20Levels,-Upon%20first%20unlocking
         player.setProperty(PlayerProperty.PROP_MAX_SPRING_VOLUME, 8500000);
+        // Temporary: Auto enable 100% statue recovery until we can adjust statue settings in game
+        // TODO: remove
+        player.setProperty(PlayerProperty.PROP_SPRING_AUTO_USE_PERCENT, 100);
+        player.setProperty(PlayerProperty.PROP_IS_SPRING_AUTO_USE, 1);
 
         long now = System.currentTimeMillis() / 1000;
         long secondsSinceLastUsed = now - player.getSpringLastUsed();
