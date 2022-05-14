@@ -4,6 +4,7 @@ import java.io.*;
 import java.util.Calendar;
 
 import emu.grasscutter.command.CommandMap;
+import emu.grasscutter.http.NettyHttpServer;
 import emu.grasscutter.plugin.PluginManager;
 import emu.grasscutter.plugin.api.ServerHook;
 import emu.grasscutter.scripts.ScriptLoader;
