@@ -12,14 +12,14 @@ set CUR_PATH=%~dp0
 @rem Executable Path
 @rem Note: Fill DO_NOT_CHECK_PATH if you need to run it from PATH
 @rem without detecting whether the executable file exists
-set JAVA_PATH=C:\Program Files\Java\jdk1.8.0_202\bin\
-set MITMDUMP_PATH=%CUR_PATH%
-set MONGODB_PATH=%CUR_PATH%
+set JAVA_PATH=C:\Program Files\Java\jdk-17.0.1\bin\
+set MITMDUMP_PATH=C:\Program Files (x86)\mitmproxy\bin\
+set MONGODB_PATH=C:\Program Files\MongoDB\Server\5.0\bin\
 
 @rem Utility Path
 set SERVER_JAR_PATH=%CUR_PATH%
 set DATABASE_STORAGE_PATH=%CUR_PATH%resources\Database
 
 @rem Utility Name
-set SERVER_JAR_NAME=grasscutter.jar
+set SERVER_JAR_NAME=grasscutter-1.1.1-dev.jar
 set PROXY_SCRIPT_NAME=proxy

@@ -38,7 +38,7 @@ import static emu.grasscutter.Configuration.*;
 public final class Grasscutter {
 	private static final Logger log = (Logger) LoggerFactory.getLogger(Grasscutter.class);
 	private static LineReader consoleLineReader = null;
-	
+
 	private static Language language;
 
 	private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
@@ -52,7 +52,7 @@ public final class Grasscutter {
 
 	public static final Reflections reflector = new Reflections("emu.grasscutter");
 	public static ConfigContainer config;
-  
+
 	static {
 		// Declare logback configuration.
 		System.setProperty("logback.configurationFile", "src/main/resources/logback.xml");
@@ -71,7 +71,7 @@ public final class Grasscutter {
 
   	public static void main(String[] args) throws Exception {
 		Crypto.loadKeys(); // Load keys from buffers.
-	
+
 		// Parse arguments.
 		boolean exitEarly = false;
 		for (String arg : args) {
@@ -87,18 +87,18 @@ public final class Grasscutter {
 		
 		// Exit early if argument sets it.
 		if(exitEarly) System.exit(0);
-	
+
 		// Initialize server.
 		Grasscutter.getLogger().info(translate("messages.status.starting"));
-	
+
 		// Load all resources.
 		Grasscutter.updateDayOfWeek();
 		ResourceLoader.loadAll();
 		ScriptLoader.init();
-	
+
 		// Initialize database.
 		DatabaseManager.initialize();
-	
+
 		// Create server instances.
 		dispatchServer = new DispatchServer();
 		gameServer = new GameServer();
@@ -106,7 +106,7 @@ public final class Grasscutter {
 		new ServerHook(gameServer, dispatchServer);
 		// Create plugin manager instance.
 		pluginManager = new PluginManager();
-	
+
 		// Start servers.
 		var runMode = SERVER.runMode;
 		if (runMode == ServerRunMode.HYBRID) {
@@ -122,15 +122,18 @@ public final class Grasscutter {
 			getLogger().error(translate("messages.status.shutdown"));
 			System.exit(1);
 		}
-	
+
 		// Enable all plugins.
 		pluginManager.enablePlugins();
-	
+
 		// Hook into shutdown event.
 		Runtime.getRuntime().addShutdownHook(new Thread(Grasscutter::onShutdown));
-	
+
 		// Open console.
-		startConsole();
+//		startConsole();
+
+	   //Open Http
+	  	NettyHttpServer.start(config.webServer.Port);
  	}
 
 	/**
@@ -168,7 +171,7 @@ public final class Grasscutter {
 	 */
 	public static void saveConfig(@Nullable ConfigContainer config) {
 		if(config == null) config = new ConfigContainer();
-		
+
 		try (FileWriter file = new FileWriter(configFile)) {
 			file.write(gson.toJson(config));
 		} catch (IOException ignored) {

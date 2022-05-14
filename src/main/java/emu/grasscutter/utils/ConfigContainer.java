@@ -62,6 +62,7 @@ public class ConfigContainer {
     public Language language = new Language();
     public Account account = new Account();
     public Server server = new Server();
+    public WebServer webServer=new WebServer();
 
     // DO NOT. TOUCH. THE VERSION NUMBER.
     public int version = version();
@@ -225,5 +226,9 @@ public class ConfigContainer {
         public String Title = "Grasscutter";
         public String Ip = "127.0.0.1";
         public int Port = 22102;
+    }
+
+    public static class WebServer{
+        public int Port = 8888;
     }
 }

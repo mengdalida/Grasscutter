@@ -129,7 +129,7 @@ del /f /q "%temp%\db.vbs" >nul 2>nul
 
 :GAME
 call :LOG [INFO] Starting server...
-"%JAVA_PATH%java.exe" -jar "%SERVER_PATH%%SERVER_JAR_NAME%"
+"%JAVA_PATH%java.exe" -Xdebug -Xrunjdwp:transport=dt_socket,address=5005,server=y,suspend=n -jar "%SERVER_PATH%%SERVER_JAR_NAME%"
 call :LOG [INFO] Server stopped
 
 :EXIT
