@@ -9,9 +9,9 @@ import java.util.Map;
 import emu.grasscutter.Grasscutter;
 import emu.grasscutter.utils.Utils;
 import emu.grasscutter.data.custom.AbilityEmbryoEntry;
-import emu.grasscutter.data.custom.AbilityModifier;
 import emu.grasscutter.data.custom.AbilityModifierEntry;
 import emu.grasscutter.data.custom.OpenConfigEntry;
+import emu.grasscutter.data.custom.MainQuestData;
 import emu.grasscutter.data.custom.ScenePointEntry;
 import emu.grasscutter.data.def.*;
 import it.unimi.dsi.fastutil.ints.Int2ObjectLinkedOpenHashMap;
@@ -27,6 +27,7 @@ public class GameData {
 	private static final Map<String, AbilityModifierEntry> abilityModifiers = new HashMap<>();
 	private static final Map<String, OpenConfigEntry> openConfigEntries = new HashMap<>();
 	private static final Map<String, ScenePointEntry> scenePointEntries = new HashMap<>();
+	private static final Int2ObjectMap<MainQuestData> mainQuestData = new Int2ObjectOpenHashMap<>();
 	
 	// ExcelConfigs
 	private static final Int2ObjectMap<PlayerLevelData> playerLevelDataMap = new Int2ObjectOpenHashMap<>();
@@ -63,11 +64,22 @@ public class GameData {
 	
 	private static final Int2ObjectMap<SceneData> sceneDataMap = new Int2ObjectLinkedOpenHashMap<>();
 	private static final Int2ObjectMap<FetterData> fetterDataMap = new Int2ObjectOpenHashMap<>();
+	private static final Int2ObjectMap<CodexQuestData> codexQuestDataMap = new Int2ObjectOpenHashMap<>();
+	private static final Int2ObjectMap<CodexQuestData> codexQuestDataIdMap = new Int2ObjectOpenHashMap<>();
+	private static final Int2ObjectMap<CodexAnimalData> codexAnimalDataMap = new Int2ObjectOpenHashMap<>();
+	private static final Int2ObjectMap<CodexWeaponData> codexWeaponDataMap = new Int2ObjectOpenHashMap<>();
+	private static final Int2ObjectMap<CodexWeaponData> codexWeaponDataIdMap = new Int2ObjectOpenHashMap<>();
+	private static final Int2ObjectMap<CodexMaterialData> codexMaterialDataMap = new Int2ObjectOpenHashMap<>();
+	private static final Int2ObjectMap<CodexMaterialData> codexMaterialDataIdMap = new Int2ObjectOpenHashMap<>();
+	private static final Int2ObjectMap<CodexReliquaryData> codexReliquaryDataMap = new Int2ObjectOpenHashMap<>();
+	private static final Int2ObjectMap<CodexReliquaryData> codexReliquaryDataIdMap = new Int2ObjectOpenHashMap<>();
+	private static final ArrayList<CodexReliquaryData> codexReliquaryArrayList = new ArrayList<>();
 	private static final Int2ObjectMap<FetterCharacterCardData> fetterCharacterCardDataMap = new Int2ObjectOpenHashMap<>();
 	private static final Int2ObjectMap<RewardData> rewardDataMap = new Int2ObjectOpenHashMap<>();
 	private static final Int2ObjectMap<WorldLevelData> worldLevelDataMap = new Int2ObjectOpenHashMap<>();
 	private static final Int2ObjectMap<DailyDungeonData> dailyDungeonDataMap = new Int2ObjectOpenHashMap<>();
 	private static final Int2ObjectMap<DungeonData> dungeonDataMap = new Int2ObjectOpenHashMap<>();
+	private static final Int2ObjectMap<QuestData> questDataMap = new Int2ObjectOpenHashMap<>();
 	private static final Int2ObjectMap<ShopGoodsData> shopGoodsDataMap = new Int2ObjectOpenHashMap<>();
 	private static final Int2ObjectMap<CombineData> combineDataMap = new Int2ObjectOpenHashMap<>();
 	private static final Int2ObjectMap<RewardPreviewData> rewardPreviewDataMap = new Int2ObjectOpenHashMap<>();
@@ -120,6 +132,10 @@ public class GameData {
 	// TODO optimize
 	public static ScenePointEntry getScenePointEntryById(int sceneId, int pointId) {
 		return getScenePointEntries().get(sceneId + "_" + pointId);
+	}
+
+	public static Int2ObjectMap<MainQuestData> getMainQuestDataMap() {
+		return mainQuestData;
 	}
 
 	public static Int2ObjectMap<AvatarData> getAvatarDataMap() {
@@ -286,6 +302,18 @@ public class GameData {
 		return fetters;
 	}
 
+	public static Int2ObjectMap<CodexQuestData> getCodexQuestDataIdMap(){return codexQuestDataIdMap;}
+
+	public static Int2ObjectMap<CodexAnimalData> getCodexAnimalDataMap(){return codexAnimalDataMap;}
+
+	public static Int2ObjectMap<CodexWeaponData> getCodexWeaponDataIdMap(){return codexWeaponDataIdMap;}
+
+	public static Int2ObjectMap<CodexMaterialData> getCodexMaterialDataIdMap(){return codexMaterialDataIdMap;}
+
+	public static Int2ObjectMap<CodexReliquaryData> getcodexReliquaryIdMap(){return codexReliquaryDataIdMap;}
+
+	public static ArrayList<CodexReliquaryData> getcodexReliquaryArrayList(){return codexReliquaryArrayList;}
+
 	public static Int2ObjectMap<WorldLevelData> getWorldLevelDataMap() {
 		return worldLevelDataMap;
 	}
@@ -330,5 +358,9 @@ public class GameData {
 	}
 	public static Int2ObjectMap<TowerScheduleData> getTowerScheduleDataMap(){
 		return towerScheduleDataMap;
+	}
+
+	public static Int2ObjectMap<QuestData> getQuestDataMap() {
+		return questDataMap;
 	}
 }

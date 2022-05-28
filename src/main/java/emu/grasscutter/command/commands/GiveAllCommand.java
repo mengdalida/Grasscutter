@@ -20,10 +20,6 @@ public final class GiveAllCommand implements CommandHandler {
 
     @Override
     public void execute(Player sender, Player targetPlayer, List<String> args) {
-        if (targetPlayer == null) {
-            CommandHandler.sendMessage(sender, translate(sender, "commands.execution.need_target"));
-            return;
-        }
         int amount = 99999;
 
         switch (args.size()) {
@@ -61,7 +57,8 @@ public final class GiveAllCommand implements CommandHandler {
             }
             // This will handle stats and talents
             avatar.recalcStats();
-            player.addAvatar(avatar);
+            // Don't try to add each avatar to the current team
+            player.addAvatar(avatar, false);
         }
 
         //some test items
