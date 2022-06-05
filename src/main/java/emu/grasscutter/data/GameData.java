@@ -8,12 +8,12 @@ import java.util.Map;
 
 import emu.grasscutter.Grasscutter;
 import emu.grasscutter.utils.Utils;
-import emu.grasscutter.data.custom.AbilityEmbryoEntry;
-import emu.grasscutter.data.custom.AbilityModifierEntry;
-import emu.grasscutter.data.custom.OpenConfigEntry;
-import emu.grasscutter.data.custom.MainQuestData;
-import emu.grasscutter.data.custom.ScenePointEntry;
-import emu.grasscutter.data.def.*;
+import emu.grasscutter.data.binout.AbilityEmbryoEntry;
+import emu.grasscutter.data.binout.AbilityModifierEntry;
+import emu.grasscutter.data.binout.MainQuestData;
+import emu.grasscutter.data.binout.OpenConfigEntry;
+import emu.grasscutter.data.binout.ScenePointEntry;
+import emu.grasscutter.data.excels.*;
 import it.unimi.dsi.fastutil.ints.Int2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
@@ -51,7 +51,8 @@ public class GameData {
 	private static final Int2ObjectMap<WeaponPromoteData> weaponPromoteDataMap = new Int2ObjectOpenHashMap<>();
 	private static final Int2ObjectMap<WeaponCurveData> weaponCurveDataMap = new Int2ObjectOpenHashMap<>();
 	private static final Int2ObjectMap<EquipAffixData> equipAffixDataMap = new Int2ObjectOpenHashMap<>();
-	
+
+	private static final Int2ObjectMap<EnvAnimalGatherConfigData> envAnimalGatherConfigDataMap = new Int2ObjectOpenHashMap<>();
 	private static final Int2ObjectMap<MonsterData> monsterDataMap = new Int2ObjectOpenHashMap<>();
 	private static final Int2ObjectMap<NpcData> npcDataMap = new Int2ObjectOpenHashMap<>();
 	private static final Int2ObjectMap<GadgetData> gadgetDataMap = new Int2ObjectOpenHashMap<>();
@@ -239,6 +240,9 @@ public class GameData {
 
 	public static Int2ObjectMap<MonsterData> getMonsterDataMap() {
 		return monsterDataMap;
+	}
+	public static Int2ObjectMap<EnvAnimalGatherConfigData> getEnvAnimalGatherConfigDataMap() {
+		return envAnimalGatherConfigDataMap;
 	}
 
 	public static Int2ObjectMap<NpcData> getNpcDataMap() {

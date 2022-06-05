@@ -52,7 +52,8 @@
       "run_mode_help": "伺服器運行模式必須為 HYBRID 或者 DISPATCH_ONLY 或者 GAME_ONLY。Grasscutter 啟動失敗...",
       "create_resources": "正在建立 resources 資料夾...",
       "resources_error": "請將 BinOutput 和 ExcelBinOutput 複製到 resources 資料夾。",
-      "version": "Grasscutter版本： %s-%s"
+      "version": "Grasscutter版本： %s-%s",
+      "game_version": "游戏版本: %s"
     }
   },
   "commands": {
@@ -116,7 +117,7 @@
       "description": "向所有玩家發送公告。"
     },
     "changescene": {
-      "usage": "用法：changescene <scene id>",
+      "usage": "用法：changescene <sceneId>",
       "already_in_scene": "你已經在這個場景中了。",
       "success": "已切換至場景 %s.",
       "exists_error": "此場景不存在。",
@@ -134,12 +135,12 @@
       "description": "從你的背包中刪除所有未裝備且未上鎖的物品，包括稀有物品。"
     },
     "coop": {
-      "usage": "用法：coop <playerId> <target playerId>",
+      "usage": "用法：coop [host uid]",
       "success": "召喚了 %s 到 %s 的世界。",
       "description": "強制傳送指定用戶到他人的世界。"
     },
     "enter_dungeon": {
-      "usage": "用法：enterdungeon <dungeon id>",
+      "usage": "用法：enterdungeon <dungeonId>",
       "changed": "已進入祕境 %s",
       "not_found_error": "此祕境不存在。",
       "in_dungeon_error": "你已經在祕境中了。",
@@ -159,7 +160,7 @@
       "description": "給予指定聖遺物。"
     },
     "giveChar": {
-      "usage": "用法：givechar <player> <itemId|itemName> [level]",
+      "usage": "用法：givechar <player> <avatarId> [level]",
       "given": "已將 %s 等級 %s 給予 %s。",
       "invalid_avatar_id": "無效的角色ID。",
       "invalid_avatar_level": "無效的角色等級。.",
@@ -167,7 +168,7 @@
       "description": "給予指定角色。"
     },
     "give": {
-      "usage": "用法：give <player> <itemId|itemName> [amount] [level]",
+      "usage": "用法：give <player> <itemId|itemName> [amount] [level] [refinement]",
       "refinement_only_applicable_weapons": "精煉度只能施加在武器上面。",
       "refinement_must_between_1_and_5": "精煉度必需在 1 到 5 之間。",
       "given": "已經將 %s 個 %s 給予 %s。",
@@ -199,7 +200,7 @@
       "description": "殺死所有怪物。"
     },
     "killCharacter": {
-      "usage": "用法：/killcharacter [playerId]",
+      "usage": "用法：killcharacter [playerId]",
       "success": "已殺死 %s 目前的場上角色。",
       "description": "殺死玩家目前使用的場上角色。"
     },
@@ -250,7 +251,7 @@
       "description": "重置當前角色的命之座，重新登入後將會生效。"
     },
     "resetShopLimit": {
-      "usage": "用法：/resetshop <player id>",
+      "usage": "用法：resetshop <playerId>",
       "success": "重置完成。",
       "description": "重置所選玩家的商店刷新時間。"
     },
@@ -311,7 +312,8 @@
     "spawn": {
       "usage": "用法：spawn <entityId> [amount] [level(僅限怪物)]",
       "success": "已生成 %s 個 %s。",
-      "description": "在你附近生成一個實體動物。"
+      "limit_reached": "場景中的生成數量已達上限。已替代為生成 %s 個實體。",
+      "description": "在你附近生成實體。"
     },
     "stop": {
       "success": "正在關閉伺服器...",
@@ -358,16 +360,16 @@
       "description": "將你世界裡的所有玩家傳送到你目前的所在位置。"
     },
     "teleport": {
-      "usage_server": "用法：/tp @<player id> <x> <y> <z> [scene id]",
-      "usage": "用法：/tp [@<player id>] <x> <y> <z> [scene id]",
+      "usage_server": "用法：tp @<playerId> <x> <y> <z> [sceneId]",
+      "usage": "用法：tp [@<playerId>] <x> <y> <z> [sceneId]",
       "specify_player_id": "你必須指定一個玩家ID。",
       "invalid_position": "無效的座標。",
       "success": "傳送 %s 到座標 %s,%s,%s ，場景為 %s 。",
       "description": "將玩家的位置傳送到你所指定的座標。"
     },
     "weather": {
-      "usage": "用法：weather <weatherId> [climateId]",
-      "success": "已將當前天氣設定為 %s ，氣候則為 %s 。",
+      "usage": "用法：weather <氣候型別(天氣ID)> <天氣型別(氣候ID)>\n天氣型別：'0: 無, 1: 晴天, 2: 多雲, 3: 雨, 4: 雷雨, 5: 雪, 6: 霧'",
+      "success": "已將當前氣候型別設定為 %s，天氣型別為 %s。",
       "invalid_id": "無效的ID。",
       "description": "更改目前的天氣。"
     },
