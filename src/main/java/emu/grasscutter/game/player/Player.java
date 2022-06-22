@@ -2,6 +2,7 @@ package emu.grasscutter.game.player;
 
 import dev.morphia.annotations.*;
 import emu.grasscutter.GameConstants;
+import emu.grasscutter.Grasscutter;
 import emu.grasscutter.data.GameData;
 import emu.grasscutter.data.excels.PlayerLevelData;
 import emu.grasscutter.database.DatabaseHelper;
@@ -11,9 +12,10 @@ import emu.grasscutter.game.ability.AbilityManager;
 import emu.grasscutter.game.avatar.Avatar;
 import emu.grasscutter.game.avatar.AvatarProfileData;
 import emu.grasscutter.game.avatar.AvatarStorage;
+import emu.grasscutter.game.battlepass.BattlePassManager;
 import emu.grasscutter.game.entity.EntityMonster;
 import emu.grasscutter.game.entity.EntityVehicle;
-import emu.grasscutter.game.managers.DeforestationManager.DeforestationManager;
+import emu.grasscutter.game.home.GameHome;
 import emu.grasscutter.game.entity.EntityGadget;
 import emu.grasscutter.game.entity.EntityItem;
 import emu.grasscutter.game.entity.GameEntity;
@@ -25,17 +27,22 @@ import emu.grasscutter.game.inventory.GameItem;
 import emu.grasscutter.game.inventory.Inventory;
 import emu.grasscutter.game.mail.Mail;
 import emu.grasscutter.game.mail.MailHandler;
+import emu.grasscutter.game.managers.FurnitureManager;
 import emu.grasscutter.game.managers.InsectCaptureManager;
-import emu.grasscutter.game.managers.StaminaManager.StaminaManager;
+import emu.grasscutter.game.managers.ResinManager;
+import emu.grasscutter.game.managers.deforestation.DeforestationManager;
+import emu.grasscutter.game.managers.energy.EnergyManager;
+import emu.grasscutter.game.managers.forging.ActiveForgeData;
+import emu.grasscutter.game.managers.forging.ForgingManager;
+import emu.grasscutter.game.managers.mapmark.*;
+import emu.grasscutter.game.managers.stamina.StaminaManager;
 import emu.grasscutter.game.managers.SotSManager;
-import emu.grasscutter.game.managers.EnergyManager.EnergyManager;
 import emu.grasscutter.game.props.ActionReason;
-import emu.grasscutter.game.props.EntityType;
 import emu.grasscutter.game.props.PlayerProperty;
 import emu.grasscutter.game.props.SceneType;
 import emu.grasscutter.game.quest.QuestManager;
 import emu.grasscutter.game.shop.ShopLimit;
-import emu.grasscutter.game.managers.MapMarkManager.*;
+import emu.grasscutter.game.tower.TowerData;
 import emu.grasscutter.game.tower.TowerManager;
 import emu.grasscutter.game.world.Scene;
 import emu.grasscutter.game.world.World;
@@ -44,6 +51,7 @@ import emu.grasscutter.net.proto.*;
 import emu.grasscutter.net.proto.AbilityInvokeEntryOuterClass.AbilityInvokeEntry;
 import emu.grasscutter.net.proto.AttackResultOuterClass.AttackResult;
 import emu.grasscutter.net.proto.CombatInvokeEntryOuterClass.CombatInvokeEntry;
+import emu.grasscutter.net.proto.GadgetInteractReqOuterClass.GadgetInteractReq;
 import emu.grasscutter.net.proto.InteractTypeOuterClass.InteractType;
 import emu.grasscutter.net.proto.MpSettingTypeOuterClass.MpSettingType;
 import emu.grasscutter.net.proto.OnlinePlayerInfoOuterClass.OnlinePlayerInfo;
@@ -90,6 +98,10 @@ public class Player {
 	private Set<Integer> flyCloakList;
 	private Set<Integer> costumeList;
 	private Set<Integer> unlockedForgingBlueprints;
+	private Set<Integer> unlockedCombines;
+	private Set<Integer> unlockedFurniture;
+	private Set<Integer> unlockedFurnitureSuite;
+	private List<ActiveForgeData> activeForges;
 
 	private Integer widgetId;
 
@@ -114,7 +126,8 @@ public class Player {
 
 	private TeamManager teamManager;
 
-	private TowerManager towerManager;
+	@Transient private TowerManager towerManager;
+	private TowerData towerData;
 	private PlayerGachaInfo gachaInfo;
 	private PlayerProfile playerProfile;
 	private boolean showAvatar;
@@ -152,10 +165,16 @@ public class Player {
 	@Transient private MapMarksManager mapMarksManager;
 	@Transient private StaminaManager staminaManager;
 	@Transient private EnergyManager energyManager;
+	@Transient private ResinManager resinManager;
+	@Transient private ForgingManager forgingManager;
 	@Transient private DeforestationManager deforestationManager;
+	@Transient private GameHome home;
+	@Transient private FurnitureManager furnitureManager;
+	@Transient private BattlePassManager battlePassManager;
 
 	private long springLastUsed;
 	private HashMap<String, MapMark> mapMarks;
+	private int nextResinRefresh;
 
 	@Deprecated
 	@SuppressWarnings({"rawtypes", "unchecked"}) // Morphia only!
@@ -184,7 +203,12 @@ public class Player {
 		this.nameCardList = new HashSet<>();
 		this.flyCloakList = new HashSet<>();
 		this.costumeList = new HashSet<>();
+		this.towerData = new TowerData();
 		this.unlockedForgingBlueprints = new HashSet<>();
+		this.unlockedCombines = new HashSet<>();
+		this.unlockedFurniture = new HashSet<>();
+		this.unlockedFurnitureSuite = new HashSet<>();
+		this.activeForges = new ArrayList<>();
 
 		this.setSceneId(3);
 		this.setRegionId(1);
@@ -208,6 +232,9 @@ public class Player {
 		this.staminaManager = new StaminaManager(this);
 		this.sotsManager = new SotSManager(this);
 		this.energyManager = new EnergyManager(this);
+		this.resinManager = new ResinManager(this);
+		this.forgingManager = new ForgingManager(this);
+		this.furnitureManager = new FurnitureManager(this);
 	}
 
 	// On player creation
@@ -238,7 +265,10 @@ public class Player {
 		this.staminaManager = new StaminaManager(this);
 		this.sotsManager = new SotSManager(this);
 		this.energyManager = new EnergyManager(this);
+		this.resinManager = new ResinManager(this);
 		this.deforestationManager = new DeforestationManager(this);
+		this.forgingManager = new ForgingManager(this);
+		this.furnitureManager = new FurnitureManager(this);
 	}
 
 	public int getUid() {
@@ -357,7 +387,9 @@ public class Player {
 	public void setCurrentRealmId(Integer currentRealmId) {
 		this.currentRealmId = currentRealmId;
 	}
-
+	public GameHome getHome(){
+		return home;
+	}
 	public Position getPos() {
 		return pos;
 	}
@@ -410,6 +442,14 @@ public class Player {
 		this.sendPacket(new PacketPlayerPropNotify(this, PlayerProperty.PROP_PLAYER_MCOIN));
 	}
 
+	public int getHomeCoin() {
+		return this.getProperty(PlayerProperty.PROP_PLAYER_HOME_COIN);
+	}
+
+	public void setHomeCoin(int coin) {
+		this.setProperty(PlayerProperty.PROP_PLAYER_HOME_COIN, coin);
+		this.sendPacket(new PacketPlayerPropNotify(this, PlayerProperty.PROP_PLAYER_HOME_COIN));
+	}
 	private int getExpRequired(int level) {
 		PlayerLevelData levelData = GameData.getPlayerLevelDataMap().get(level);
 		return levelData != null ? levelData.getExp() : 0;
@@ -467,11 +507,19 @@ public class Player {
 	public TeamManager getTeamManager() {
 		return this.teamManager;
 	}
-
+	
 	public TowerManager getTowerManager() {
 		return towerManager;
 	}
-
+	
+	public TowerData getTowerData() {
+		if(towerData==null){
+			// because of mistake, null may be saved as storage at some machine, this if can be removed in future
+			towerData = new TowerData();
+		}
+		return towerData;
+	}
+	
 	public QuestManager getQuestManager() {
 		return questManager;
 	}
@@ -518,7 +566,23 @@ public class Player {
 	}
 
 	public Set<Integer> getUnlockedForgingBlueprints() {
-		return unlockedForgingBlueprints;
+		return this.unlockedForgingBlueprints;
+	}
+
+	public Set<Integer> getUnlockedCombines() {
+		return this.unlockedCombines;
+	}
+
+	public Set<Integer> getUnlockedFurniture() {
+		return unlockedFurniture;
+	}
+
+	public Set<Integer> getUnlockedFurnitureSuite() {
+		return unlockedFurnitureSuite;
+	}
+
+	public List<ActiveForgeData> getActiveForges() {
+		return this.activeForges;
 	}
 
 	public MpSettingType getMpSetting() {
@@ -623,6 +687,14 @@ public class Player {
 
 	public void setSpringLastUsed(long val) {
 		springLastUsed = val;
+	}
+
+	public int getNextResinRefresh() {
+		return nextResinRefresh;
+	}
+
+	public void setNextResinRefresh(int value) {
+		this.nextResinRefresh = value;
 	}
 
 	public SceneLoadState getSceneLoadState() {
@@ -917,7 +989,8 @@ public class Player {
 		return this.getMailHandler().replaceMailByIndex(index, message);
 	}
 	
-	public void interactWith(int gadgetEntityId) {
+
+	public void interactWith(int gadgetEntityId, GadgetInteractReq req) {
 		GameEntity entity = getScene().getEntityById(gadgetEntityId);
 		if (entity == null) {
 			return;
@@ -945,11 +1018,15 @@ public class Player {
 				}
 			}
 		} else if (entity instanceof EntityGadget gadget) {
-			if (gadget.getGadgetData().getType() == EntityType.RewardStatue) {
-				if (scene.getChallenge() != null) {
-					scene.getChallenge().getStatueDrops(this);
-				}
-				this.sendPacket(new PacketGadgetInteractRsp(gadget, InteractType.INTERACT_TYPE_OPEN_STATUE));
+			
+			if (gadget.getContent() == null) {
+				return;
+			}
+			
+			boolean shouldDelete = gadget.getContent().onInteract(this, req);
+			
+			if (shouldDelete) {
+				entity.getScene().removeEntity(entity);
 			}
 		} else if (entity instanceof EntityMonster monster) {
 			insectCaptureManager.arrestSmallCreature(monster);
@@ -1119,6 +1196,27 @@ public class Player {
 		return this.energyManager;
 	}
 
+	public ResinManager getResinManager() {
+		return this.resinManager;
+	}
+
+	public ForgingManager getForgingManager() {
+		return this.forgingManager;
+	}
+
+	public FurnitureManager getFurnitureManager() {
+		return furnitureManager;
+	}
+
+	public BattlePassManager getBattlePassManager(){
+		return battlePassManager;
+	}
+	
+	public void loadBattlePassManager() {
+		if (this.battlePassManager != null) return;
+		this.battlePassManager = DatabaseHelper.loadBattlePass(this);
+	}
+
 	public AbilityManager getAbilityManager() {
 		return abilityManager;
 	}
@@ -1178,6 +1276,12 @@ public class Player {
 			this.save();
 			this.sendPacket(new PacketAvatarExpeditionDataNotify(this));
 		}
+
+		// Send updated forge queue data, if necessary.
+		this.getForgingManager().sendPlayerForgingUpdate();
+
+		// Recharge resin.
+		this.getResinManager().rechargeResin();
 	}
 
 
@@ -1201,6 +1305,9 @@ public class Player {
 	// Called from tokenrsp
 	public void loadFromDatabase() {
 		// Make sure these exist
+		if (this.getTowerManager() == null) {
+			this.towerManager = new TowerManager(this);
+		}
 		if (this.getTeamManager() == null) {
 			this.teamManager = new TeamManager(this);
 		}
@@ -1210,28 +1317,19 @@ public class Player {
 		if (this.getProfile().getUid() == 0) {
 			this.getProfile().syncWithCharacter(this);
 		}
-
-		// Check if player object exists in server
-		// TODO - optimize
-		Player exists = this.getServer().getPlayerByUid(getUid());
-		if (exists != null) {
-			exists.getSession().close();
-		}
-
+		//Make sure towerManager's player is online player
+		this.getTowerManager().setPlayer(this);
+		
 		// Load from db
 		this.getAvatars().loadFromDatabase();
 		this.getInventory().loadFromDatabase();
-		this.getAvatars().postLoad();
+		this.getAvatars().postLoad(); // Needs to be called after inventory is handled
 
 		this.getFriendsList().loadFromDatabase();
 		this.getMailHandler().loadFromDatabase();
 		this.getQuestManager().loadFromDatabase();
 		
-		// Add to gameserver (Always handle last)
-		if (getSession().isActive()) {
-			getServer().registerPlayer(this);
-			getProfile().setPlayer(this); // Set online
-		}
+		this.loadBattlePassManager();
 	}
 
 	public void onLogin() {
@@ -1242,7 +1340,6 @@ public class Player {
 			if (quest != null) {
 				quest.finish();
 			}
-
 			getQuestManager().addQuest(35101);
 			
 			this.setSceneId(3);
@@ -1264,15 +1361,21 @@ public class Player {
 		session.send(new PacketPlayerStoreNotify(this));
 		session.send(new PacketAvatarDataNotify(this));
 		session.send(new PacketFinishedParentQuestNotify(this));
+		session.send(new PacketBattlePassAllDataNotify(this));
 		session.send(new PacketQuestListNotify(this));
 		session.send(new PacketCodexDataFullNotify(this));
 		session.send(new PacketAllWidgetDataNotify(this));
 		session.send(new PacketWidgetGadgetAllDataNotify());
-		session.send(new PacketPlayerHomeCompInfoNotify(this));
-		session.send(new PacketHomeComfortInfoNotify(this));
-		session.send(new PacketForgeDataNotify(this));
+		session.send(new PacketCombineDataNotify(this.unlockedCombines));
+		this.forgingManager.sendForgeDataNotify();
+		this.resinManager.onPlayerLogin();
 
 		getTodayMoonCard(); // The timer works at 0:0, some users log in after that, use this method to check if they have received a reward today or not. If not, send the reward.
+
+		this.furnitureManager.onLogin();
+		// Home
+		home = GameHome.getByUid(getUid());
+		home.onOwnerLogin(this);
 
 		session.send(new PacketPlayerEnterSceneNotify(this)); // Enter game world
 		session.send(new PacketPlayerLevelRewardUpdateNotify(rewardedLevels));
@@ -1286,39 +1389,59 @@ public class Player {
 
 		// Call join event.
 		PlayerJoinEvent event = new PlayerJoinEvent(this); event.call();
-		if(event.isCanceled()) // If event is not cancelled, continue.
+		if(event.isCanceled()){ // If event is not cancelled, continue.
 			session.close();
+			return;
+		}
+		
+		// register
+		getServer().registerPlayer(this);
+		getProfile().setPlayer(this); // Set online
 	}
 
 	public void onLogout() {
-		// stop stamina calculation
-		getStaminaManager().stopSustainedStaminaHandler();
+		try{
+			// stop stamina calculation
+			getStaminaManager().stopSustainedStaminaHandler();
 
-		// force to leave the dungeon
-		if (getScene().getSceneType() == SceneType.SCENE_DUNGEON) {
+			// force to leave the dungeon (inside has a "if")
 			this.getServer().getDungeonManager().exitDungeon(this);
+
+			// Leave world
+			if (this.getWorld() != null) {
+				this.getWorld().removePlayer(this);
+			}
+
+			// Status stuff
+			this.getProfile().syncWithCharacter(this);
+			this.getProfile().setPlayer(null); // Set offline
+
+			this.getCoopRequests().clear();
+
+			// Save to db
+			this.save();
+			this.getTeamManager().saveAvatars();
+			this.getFriendsList().save();
+
+			// Call quit event.
+			PlayerQuitEvent event = new PlayerQuitEvent(this); event.call();
+
+			//reset wood
+			getDeforestationManager().resetWood();
+
+		}catch (Throwable e){
+			e.printStackTrace();
+			Grasscutter.getLogger().warn("Player (UID {}) save failure", getUid());
+		}finally {
+			removeFromServer();
 		}
-		// Leave world
-		if (this.getWorld() != null) {
-			this.getWorld().removePlayer(this);
-		}
+	}
 
-		// Status stuff
-		this.getProfile().syncWithCharacter(this);
-		this.getProfile().setPlayer(null); // Set offline
-
-		this.getCoopRequests().clear();
-
-		// Save to db
-		this.save();
-		this.getTeamManager().saveAvatars();
-		this.getFriendsList().save();
-		
-		// Call quit event.
-		PlayerQuitEvent event = new PlayerQuitEvent(this); event.call();
-
-		//reset wood
-		getDeforestationManager().resetWood();
+	public void removeFromServer() {
+		// Remove from server.
+		//Note: DON'T DELETE BY UID,BECAUSE THERE ARE MULTIPLE SAME UID PLAYERS WHEN DUPLICATED LOGIN!
+		//so I decide to delete by object rather than uid
+		getServer().getPlayers().values().removeIf(player1 -> player1 == this);
 	}
 
 	public enum SceneLoadState {
