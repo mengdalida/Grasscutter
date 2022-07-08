@@ -3,7 +3,7 @@
 
 <div align="center"><a href="https://discord.gg/T5vZU6UyeG"><img alt="Discord - Grasscutter" src="https://img.shields.io/discord/965284035985305680?label=Discord&logo=discord&style=for-the-badge"></a></div>
 
-[EN](README.md) | 简中 | [繁中](README_zh-TW.md) | [FR](README_fr-FR.md)
+[EN](README.md) | 简中 | [繁中](README_zh-TW.md) | [FR](README_fr-FR.md) | [ES](README_es-ES.md) | [HE](README_HE.md) | [RU](README_ru-RU.md)
 
 **请注意:** 欢迎成为本项目的贡献者。在提交 PR 之前, 请仔细阅读[代码规范](https://github.com/Grasscutters/Grasscutter/blob/stable/CONTRIBUTING.md)。
 
@@ -30,11 +30,11 @@
 
 * [MongoDB](https://www.mongodb.com/try/download/community) (推荐 4.0+)
 
-* 代理: mitmproxy (推荐 mitmdump), Fiddler Classic 等
+* 代理程序: mitmproxy (推荐 mitmdump), Fiddler Classic 等
 
 ### 运行
 
-**注意:** 从旧版本升级到新版本, 需要删除 `config.json` 文件
+**注意:** 从旧版本升级到新版本, 需要删除 `config.json`
 
 1. 获取 `grasscutter.jar`
    - 从 [actions](https://github.com/Grasscutters/Grasscutter/suites/6895963598/artifacts/267483297) 下载
@@ -75,8 +75,8 @@ Grasscutter 使用 Gradle 来处理依赖及编译。
 
 **依赖:**
 
-- Java SE Development Kits - 17
-- Git
+- [Java SE Development Kits - 17](https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html)
+- [Git](https://git-scm.com/downloads)
 
 ##### Windows
 
