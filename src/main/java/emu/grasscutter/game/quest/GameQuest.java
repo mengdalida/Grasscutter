@@ -6,221 +6,251 @@ import emu.grasscutter.Grasscutter;
 import emu.grasscutter.data.GameData;
 import emu.grasscutter.data.binout.MainQuestData;
 import emu.grasscutter.data.binout.MainQuestData.SubQuestData;
+import emu.grasscutter.data.excels.ChapterData;
 import emu.grasscutter.data.excels.QuestData;
 import emu.grasscutter.data.excels.QuestData.QuestCondition;
 import emu.grasscutter.game.player.Player;
 import emu.grasscutter.game.quest.enums.LogicType;
 import emu.grasscutter.game.quest.enums.QuestState;
+import emu.grasscutter.game.quest.enums.QuestTrigger;
+import emu.grasscutter.net.proto.ChapterStateOuterClass;
 import emu.grasscutter.net.proto.QuestOuterClass.Quest;
-import emu.grasscutter.server.packet.send.PacketCodexDataUpdateNotify;
+import emu.grasscutter.server.packet.send.PacketChapterStateNotify;
 import emu.grasscutter.server.packet.send.PacketQuestListUpdateNotify;
 import emu.grasscutter.server.packet.send.PacketQuestProgressUpdateNotify;
 import emu.grasscutter.utils.Utils;
 
 @Entity
 public class GameQuest {
-	@Transient private GameMainQuest mainQuest;
-	@Transient private QuestData questData;
-	
-	private int questId;
-	private int mainQuestId;
-	private QuestState state;
-	
-	private int startTime;
-	private int acceptTime;
-	private int finishTime;
-	
-	private int[] finishProgressList;
-	private int[] failProgressList;
-	
-	@Deprecated // Morphia only. Do not use.
-	public GameQuest() {}
-	
-	public GameQuest(GameMainQuest mainQuest, QuestData questData) {
-		this.mainQuest = mainQuest;
-		this.questId = questData.getId();
-		this.mainQuestId = questData.getMainId();
-		this.questData = questData;
-		this.acceptTime = Utils.getCurrentSeconds();
-		this.startTime = this.acceptTime;
-		this.state = QuestState.QUEST_STATE_UNFINISHED;
-		
-		if (questData.getFinishCond() != null && questData.getAcceptCond().length != 0) {
-			this.finishProgressList = new int[questData.getFinishCond().length];
-		}
+    @Transient private GameMainQuest mainQuest;
+    @Transient private QuestData questData;
 
-		if (questData.getFailCond() != null && questData.getFailCond().length != 0) {
-			this.failProgressList = new int[questData.getFailCond().length];
-		}
-		
-		this.mainQuest.getChildQuests().put(this.questId, this);
-	}
-	
-	public GameMainQuest getMainQuest() {
-		return mainQuest;
-	}
+    private int questId;
+    private int mainQuestId;
+    private QuestState state;
 
-	public void setMainQuest(GameMainQuest mainQuest) {
-		this.mainQuest = mainQuest;
-	}
-	
-	public Player getOwner() {
-		return getMainQuest().getOwner();
-	}
+    private int startTime;
+    private int acceptTime;
+    private int finishTime;
 
-	public int getQuestId() {
-		return questId;
-	}
+    private int[] finishProgressList;
+    private int[] failProgressList;
 
-	public int getMainQuestId() {
-		return mainQuestId;
-	}
+    @Deprecated // Morphia only. Do not use.
+    public GameQuest() {}
 
-	public QuestData getData() {
-		return questData;
-	}
+    public GameQuest(GameMainQuest mainQuest, QuestData questData) {
+        this.mainQuest = mainQuest;
+        this.questId = questData.getId();
+        this.mainQuestId = questData.getMainId();
+        this.questData = questData;
+        this.acceptTime = Utils.getCurrentSeconds();
+        this.startTime = this.acceptTime;
+        this.state = QuestState.QUEST_STATE_UNFINISHED;
 
-	public void setConfig(QuestData config) {
-		if (this.getQuestId() != config.getId()) return;
-		this.questData = config;
-	}
+        if (questData.getFinishCond() != null && questData.getAcceptCond().size() != 0) {
+            this.finishProgressList = new int[questData.getFinishCond().size()];
+        }
 
-	public QuestState getState() {
-		return state;
-	}
+        if (questData.getFailCond() != null && questData.getFailCond().size() != 0) {
+            this.failProgressList = new int[questData.getFailCond().size()];
+        }
 
-	public void setState(QuestState state) {
-		this.state = state;
-	}
+        this.mainQuest.getChildQuests().put(this.questId, this);
 
-	public int getStartTime() {
-		return startTime;
-	}
+        this.getData().getBeginExec().forEach(e -> getOwner().getServer().getQuestSystem().triggerExec(this, e, e.getParam()));
 
-	public void setStartTime(int startTime) {
-		this.startTime = startTime;
-	}
+        this.getOwner().getQuestManager().triggerEvent(QuestTrigger.QUEST_CONTENT_QUEST_STATE_EQUAL, this.questId, this.state.getValue());
 
-	public int getAcceptTime() {
-		return acceptTime;
-	}
+        if (ChapterData.beginQuestChapterMap.containsKey(questId)) {
+            mainQuest.getOwner().sendPacket(new PacketChapterStateNotify(
+                ChapterData.beginQuestChapterMap.get(questId).getId(),
+                ChapterStateOuterClass.ChapterState.CHAPTER_STATE_BEGIN
+            ));
+        }
 
-	public void setAcceptTime(int acceptTime) {
-		this.acceptTime = acceptTime;
-	}
+        Grasscutter.getLogger().debug("Quest {} is started", questId);
+    }
 
-	public int getFinishTime() {
-		return finishTime;
-	}
+    public GameMainQuest getMainQuest() {
+        return mainQuest;
+    }
 
-	public void setFinishTime(int finishTime) {
-		this.finishTime = finishTime;
-	}
-	
-	public int[] getFinishProgressList() {
-		return finishProgressList;
-	}
-	
-	public void setFinishProgress(int index, int value) {
-		finishProgressList[index] = value;
-	}
+    public void setMainQuest(GameMainQuest mainQuest) {
+        this.mainQuest = mainQuest;
+    }
 
-	public int[] getFailProgressList() {
-		return failProgressList;
-	}
-	
-	public void setFailProgress(int index, int value) {
-		failProgressList[index] = value;
-	}
+    public Player getOwner() {
+        return getMainQuest().getOwner();
+    }
 
-	public void finish() {
-		this.state = QuestState.QUEST_STATE_FINISHED;
-		this.finishTime = Utils.getCurrentSeconds();
-		
-		if (this.getFinishProgressList() != null) {
-			for (int i = 0 ; i < getFinishProgressList().length; i++) {
-				getFinishProgressList()[i] = 1;
-			}
-		}
-		
-		this.getOwner().getSession().send(new PacketQuestProgressUpdateNotify(this));
-		this.getOwner().getSession().send(new PacketQuestListUpdateNotify(this));
-		
-		if (this.getData().finishParent()) {
-			// This quest finishes the questline - the main quest will also save the quest to db so we dont have to call save() here
-			this.getMainQuest().finish();
-		} else {
-			// Try and accept other quests if possible
-			this.tryAcceptQuestLine();
-			this.save();
-		}
-	}
-	
-	public boolean tryAcceptQuestLine() {
-		try {
-			MainQuestData questConfig = GameData.getMainQuestDataMap().get(this.getMainQuestId());
+    public int getQuestId() {
+        return questId;
+    }
 
-			for (SubQuestData subQuest : questConfig.getSubQuests()) {
-				GameQuest quest = getMainQuest().getChildQuestById(subQuest.getSubId());
+    public int getMainQuestId() {
+        return mainQuestId;
+    }
 
-				if (quest == null) {
-					QuestData questData = GameData.getQuestDataMap().get(subQuest.getSubId());
+    public QuestData getData() {
+        return questData;
+    }
 
-					if (questData == null || questData.getAcceptCond() == null
-							|| questData.getAcceptCond().length == 0) {
-						continue;
-					}
+    public void setConfig(QuestData config) {
+        if (this.getQuestId() != config.getId()) return;
+        this.questData = config;
+    }
 
-					int[] accept = new int[questData.getAcceptCond().length];
+    public QuestState getState() {
+        return state;
+    }
 
-					// TODO
-					for (int i = 0; i < questData.getAcceptCond().length; i++) {
-						QuestCondition condition = questData.getAcceptCond()[i];
-						boolean result = getOwner().getServer().getQuestHandler().triggerCondition(this, condition,
-								condition.getParam());
+    public void setState(QuestState state) {
+        this.state = state;
+    }
 
-						accept[i] = result ? 1 : 0;
-					}
+    public int getStartTime() {
+        return startTime;
+    }
 
-					boolean shouldAccept = LogicType.calculate(questData.getAcceptCondComb(), accept);
+    public void setStartTime(int startTime) {
+        this.startTime = startTime;
+    }
 
-					if (shouldAccept) {
-						this.getOwner().getQuestManager().addQuest(questData.getId());
-					}
-				}
-			}
-		} catch (Exception e) {
-			Grasscutter.getLogger().error("An error occurred while trying to accept quest.", e);
-		}
+    public int getAcceptTime() {
+        return acceptTime;
+    }
 
-		return false;
-	}
-	
-	public void save() {
-		getMainQuest().save();
-	}
-	
-	public Quest toProto() {
-		Quest.Builder proto = Quest.newBuilder()
-				.setQuestId(this.getQuestId())
-				.setState(this.getState().getValue())
-				.setParentQuestId(this.getMainQuestId())
-				.setStartTime(this.getStartTime())
-				.setStartGameTime(438)
-				.setAcceptTime(this.getAcceptTime());
-		
-		if (this.getFinishProgressList() != null) {
-			for (int i : this.getFinishProgressList()) {
-				proto.addFinishProgressList(i);
-			}
-		}
-		
-		if (this.getFailProgressList() != null) {
-			for (int i : this.getFailProgressList()) {
-				proto.addFailProgressList(i);
-			}
-		}
-		
-		return proto.build();
-	}
+    public void setAcceptTime(int acceptTime) {
+        this.acceptTime = acceptTime;
+    }
+
+    public int getFinishTime() {
+        return finishTime;
+    }
+
+    public void setFinishTime(int finishTime) {
+        this.finishTime = finishTime;
+    }
+
+    public int[] getFinishProgressList() {
+        return finishProgressList;
+    }
+
+    public void setFinishProgress(int index, int value) {
+        finishProgressList[index] = value;
+    }
+
+    public int[] getFailProgressList() {
+        return failProgressList;
+    }
+
+    public void setFailProgress(int index, int value) {
+        failProgressList[index] = value;
+    }
+
+    public void finish() {
+        this.state = QuestState.QUEST_STATE_FINISHED;
+        this.finishTime = Utils.getCurrentSeconds();
+
+        if (this.getFinishProgressList() != null) {
+            for (int i = 0 ; i < getFinishProgressList().length; i++) {
+                getFinishProgressList()[i] = 1;
+            }
+        }
+
+        this.getOwner().getSession().send(new PacketQuestProgressUpdateNotify(this));
+        this.getOwner().getSession().send(new PacketQuestListUpdateNotify(this));
+
+        if (this.getData().finishParent()) {
+            // This quest finishes the questline - the main quest will also save the quest to db so we dont have to call save() here
+            this.getMainQuest().finish();
+        } else {
+            // Try and accept other quests if possible
+            this.tryAcceptQuestLine();
+            this.save();
+        }
+
+        this.getData().getFinishExec().forEach(e -> getOwner().getServer().getQuestSystem().triggerExec(this, e, e.getParam()));
+
+        this.getOwner().getQuestManager().triggerEvent(QuestTrigger.QUEST_CONTENT_QUEST_STATE_EQUAL, this.questId, this.state.getValue());
+
+        if (ChapterData.endQuestChapterMap.containsKey(questId)) {
+            mainQuest.getOwner().sendPacket(new PacketChapterStateNotify(
+                ChapterData.endQuestChapterMap.get(questId).getId(),
+                ChapterStateOuterClass.ChapterState.CHAPTER_STATE_END
+            ));
+        }
+
+        Grasscutter.getLogger().debug("Quest {} is finished", questId);
+    }
+
+    public boolean tryAcceptQuestLine() {
+        try {
+            MainQuestData questConfig = GameData.getMainQuestDataMap().get(this.getMainQuestId());
+
+            for (SubQuestData subQuest : questConfig.getSubQuests()) {
+                GameQuest quest = getMainQuest().getChildQuestById(subQuest.getSubId());
+
+                if (quest == null) {
+                    QuestData questData = GameData.getQuestDataMap().get(subQuest.getSubId());
+
+                    if (questData == null || questData.getAcceptCond() == null
+                            || questData.getAcceptCond().size() == 0) {
+                        continue;
+                    }
+
+                    int[] accept = new int[questData.getAcceptCond().size()];
+
+                    // TODO
+                    for (int i = 0; i < questData.getAcceptCond().size(); i++) {
+                        QuestCondition condition = questData.getAcceptCond().get(i);
+                        boolean result = getOwner().getServer().getQuestSystem().triggerCondition(this, condition,
+                                condition.getParamStr(),
+                                condition.getParam());
+
+                        accept[i] = result ? 1 : 0;
+                    }
+
+                    boolean shouldAccept = LogicType.calculate(questData.getAcceptCondComb(), accept);
+
+                    if (shouldAccept) {
+                        this.getOwner().getQuestManager().addQuest(questData.getId());
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Grasscutter.getLogger().error("An error occurred while trying to accept quest.", e);
+        }
+
+        return false;
+    }
+
+    public void save() {
+        getMainQuest().save();
+    }
+
+    public Quest toProto() {
+        Quest.Builder proto = Quest.newBuilder()
+                .setQuestId(this.getQuestId())
+                .setState(this.getState().getValue())
+                .setParentQuestId(this.getMainQuestId())
+                .setStartTime(this.getStartTime())
+                .setStartGameTime(438)
+                .setAcceptTime(this.getAcceptTime());
+
+        if (this.getFinishProgressList() != null) {
+            for (int i : this.getFinishProgressList()) {
+                proto.addFinishProgressList(i);
+            }
+        }
+
+        if (this.getFailProgressList() != null) {
+            for (int i : this.getFailProgressList()) {
+                proto.addFailProgressList(i);
+            }
+        }
+
+        return proto.build();
+    }
 }
